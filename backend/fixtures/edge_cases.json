@@ -1,0 +1,78 @@
+[
+  {
+    "case": "duplicate_event",
+    "description": "Same event_id is submitted more than once",
+    "event": {
+      "event_id": "FIX_DUP_001",
+      "source": "firewall",
+      "timestamp": "2026-08-15T10:00:00Z",
+      "ip_address": "192.168.1.20",
+      "action": "failed_login",
+      "duration": 2.0,
+      "confidence_score": 0.80
+    }
+  },
+  {
+    "case": "out_of_order",
+    "description": "Event arrives with a timestamp earlier than a previously received event",
+    "event": {
+      "event_id": "FIX_ORDER_001",
+      "source": "IDS",
+      "timestamp": "2026-08-15T09:55:00Z",
+      "ip_address": "192.168.1.21",
+      "action": "blocked",
+      "duration": 1.5,
+      "confidence_score": 0.70
+    }
+  },
+  {
+    "case": "conflicting_sources",
+    "description": "Different sources report different actions for the same IP",
+    "events": [
+      {
+        "event_id": "FIX_CONFLICT_001",
+        "source": "firewall",
+        "timestamp": "2026-08-15T10:05:00Z",
+        "ip_address": "192.168.1.22",
+        "action": "blocked",
+        "duration": 2.0,
+        "confidence_score": 0.90
+      },
+      {
+        "event_id": "FIX_CONFLICT_002",
+        "source": "endpoint",
+        "timestamp": "2026-08-15T10:05:05Z",
+        "ip_address": "192.168.1.22",
+        "action": "allowed",
+        "duration": 2.0,
+        "confidence_score": 0.60
+      }
+    ]
+  },
+  {
+    "case": "late_event",
+    "description": "Event arrives significantly later than its event timestamp",
+    "event": {
+      "event_id": "FIX_LATE_001",
+      "source": "endpoint",
+      "timestamp": "2026-08-15T08:00:00Z",
+      "ip_address": "192.168.1.23",
+      "action": "failed_login",
+      "duration": 3.0,
+      "confidence_score": 0.75
+    }
+  },
+  {
+    "case": "invalid_confidence",
+    "description": "Confidence score is outside the valid range of 0 to 1",
+    "event": {
+      "event_id": "FIX_INVALID_001",
+      "source": "IDS",
+      "timestamp": "2026-08-15T10:10:00Z",
+      "ip_address": "192.168.1.24",
+      "action": "failed_login",
+      "duration": 2.0,
+      "confidence_score": 1.50
+    }
+  }
+]

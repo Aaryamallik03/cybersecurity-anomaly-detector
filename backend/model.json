@@ -1,0 +1,14 @@
+{
+  "base_score": 0.10,
+  "action_scores": {
+    "failed_login": 0.35,
+    "blocked": 0.25,
+    "allowed": 0.00
+  },
+  "default_action_score": 0.05,
+  "duration_threshold": 10.0,
+  "duration_score": 0.10,
+  "confidence_weight": 0.30,
+  "alert_threshold": 0.60,
+  "review_threshold": 0.40
+}
