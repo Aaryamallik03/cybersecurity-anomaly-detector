@@ -1,173 +1,82 @@
-import sys
-from datetime import datetime, timedelta, timezone
-from pymongo import MongoClient
 import json
-from pathlib import Path
+import sys
 
+from pymongo import MongoClient
 
-# ------------------------------------------------------------
-# MongoDB connection
-# ------------------------------------------------------------
+import config
+from detection import (
+    NetworkEvent,
+    calculate_ml_score,
+    check_failed_login_rule,
+    check_high_rate_rule,
+    ensure_utc,
+    make_decision,
+)
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["cybersecurity_db"]
+client = MongoClient(config.MONGO_URI)
+db = client[config.DB_NAME]
 
 events_collection = db["events"]
 audit_collection = db["audit_logs"]
 
-
-# ------------------------------------------------------------
-# Load local model
-# ------------------------------------------------------------
-
-MODEL_PATH = Path(__file__).parent / "model.json"
-
-with open(MODEL_PATH, "r") as file:
+with open(config.MODEL_PATH, "r") as file:
     MODEL = json.load(file)
 
 
-# ------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------
+def replay_event(event_id: str):
+    raw_event = events_collection.find_one({"event_id": event_id})
 
-def ensure_utc(dt):
-
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-
-    return dt.astimezone(timezone.utc)
-
-
-def calculate_ml_score(event):
-
-    score = MODEL["base_score"]
-
-    score += MODEL["action_scores"].get(
-        event["action"],
-        MODEL["default_action_score"]
-    )
-
-    duration = event.get("duration") or 0.0
-
-    if duration >= MODEL["duration_threshold"]:
-        score += MODEL["duration_score"]
-
-    score += (
-        event["confidence_score"]
-        * MODEL["confidence_weight"]
-    )
-
-    return round(
-        max(0.0, min(1.0, score)),
-        4
-    )
-
-
-# ------------------------------------------------------------
-# Replay
-# ------------------------------------------------------------
-
-def replay_event(event_id):
-
-    event = events_collection.find_one({
-        "event_id": event_id
-    })
-
-    if not event:
-
-        print(
-            f"Event '{event_id}' was not found."
-        )
-
+    if not raw_event:
+        print(f"Event '{event_id}' was not found.")
         return
 
-    event_time = ensure_utc(
-        event["timestamp"]
+    # Rebuild a NetworkEvent so replay uses the exact same validated
+    # shape and the exact same functions the live API used.
+    event = NetworkEvent(
+        event_id=raw_event["event_id"],
+        source=raw_event["source"],
+        timestamp=ensure_utc(raw_event["timestamp"]),
+        ip_address=raw_event["ip_address"],
+        action=raw_event["action"],
+        duration=raw_event.get("duration"),
+        confidence_score=raw_event["confidence_score"],
     )
 
-    ten_minutes_ago = (
-        event_time - timedelta(minutes=10)
+    failed_login_triggered, failed_login_count = check_failed_login_rule(
+        event,
+        events_collection,
+        window_minutes=config.FAILED_LOGIN_WINDOW_MINUTES,
+        threshold=config.FAILED_LOGIN_THRESHOLD,
     )
 
-    failed_login_count = (
-        events_collection.count_documents({
-            "ip_address": event["ip_address"],
-            "action": "failed_login",
-            "timestamp": {
-                "$gte": ten_minutes_ago,
-                "$lte": event_time
-            }
-        })
+    high_rate_triggered, high_rate_count = check_high_rate_rule(
+        event,
+        events_collection,
+        window_seconds=config.HIGH_RATE_WINDOW_SECONDS,
+        threshold=config.HIGH_RATE_THRESHOLD,
     )
 
-    rule_triggered = (
-        event["action"] == "failed_login"
-        and failed_login_count > 5
-    )
+    rule_triggered = failed_login_triggered or high_rate_triggered
+    ml_score = calculate_ml_score(event, MODEL)
+    decision = make_decision(rule_triggered, ml_score, MODEL)
 
-    ml_score = calculate_ml_score(event)
-
-    if (
-        rule_triggered
-        and ml_score >= MODEL["alert_threshold"]
-    ):
-        decision = "alert"
-
-    elif (
-        rule_triggered
-        or ml_score >= MODEL["alert_threshold"]
-    ):
-        decision = "alert"
-
-    elif ml_score >= MODEL["review_threshold"]:
-        decision = "pending_review"
-
-    else:
-        decision = "no_alert"
-
-    original_audit = audit_collection.find_one({
-        "event_id": event_id
-    })
-
-    original_decision = (
-        original_audit["decision"]
-        if original_audit
-        else None
-    )
+    original_audit = audit_collection.find_one({"event_id": event_id})
+    original_decision = original_audit["decision"] if original_audit else None
 
     print("\n========== REPLAY RESULT ==========")
-
     print(f"Event ID: {event_id}")
-    print(f"Original decision: {original_decision}")
-    print(f"Replayed decision: {decision}")
-    print(f"ML score: {ml_score}")
-    print(
-        f"Failed login count: "
-        f"{failed_login_count}"
-    )
-
-    print(
-        f"Deterministic match: "
-        f"{original_decision == decision}"
-    )
-
+    print(f"Original decision:  {original_decision}")
+    print(f"Replayed decision:  {decision}")
+    print(f"ML score:           {ml_score}")
+    print(f"Failed login count: {failed_login_count}")
+    print(f"High-rate count:    {high_rate_count}")
+    print(f"Deterministic match: {original_decision == decision}")
     print("===================================\n")
 
 
-# ------------------------------------------------------------
-# CLI
-# ------------------------------------------------------------
+if __name__ == "__main__":
+    if len(sys.argv) != 3 or sys.argv[1] != "--event-id":
+        print("Usage: python replay.py --event-id <event_id>")
+        sys.exit(1)
 
-if len(sys.argv) != 3 or sys.argv[1] != "--event-id":
-
-    print(
-        "Usage: python replay.py "
-        "--event-id <event_id>"
-    )
-
-    sys.exit(1)
-
-
-event_id = sys.argv[2]
-
-replay_event(event_id)
+    replay_event(sys.argv[2])
