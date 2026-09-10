@@ -2,43 +2,41 @@
 
 A machine-learning-assisted cybersecurity monitoring system for detecting suspicious network activity and behavioral anomalies.
 
-The project combines a **FastAPI backend**, **MongoDB event persistence**, **rule-based detection**, **behavioral feature engineering**, and **Isolation Forest-based anomaly detection** to analyze network/security events and generate actionable alerts.
+The project combines a FastAPI backend, MongoDB event persistence, rule-based detection, behavioral feature engineering, and Isolation Forest-based anomaly detection to analyze network and security events.
 
-> **Project status:** Active development
-> **Primary language:** Python
+> **Project Status:** Active Development
+> **Primary Language:** Python
 > **Backend:** FastAPI
-> **ML:** scikit-learn / Isolation Forest
+> **Machine Learning:** Scikit-learn / Isolation Forest
 > **Database:** MongoDB
 
 ---
 
 ## 📌 Overview
 
-Traditional security systems often rely heavily on predefined rules and known attack signatures. While these approaches are useful, they can struggle when activity deviates from previously defined patterns.
+Traditional cybersecurity systems often rely heavily on predefined rules and known attack patterns. While these approaches are useful, they may not identify unusual behavior that does not match an existing rule.
 
-This project explores a complementary approach: learning patterns from network and behavioral data and identifying events that significantly deviate from expected behavior.
+This project explores a hybrid approach that combines rule-based detection with machine-learning-based anomaly detection.
 
-The system currently supports:
+The system currently includes:
 
-* Network/security event ingestion through a REST API
-* Persistent event storage using MongoDB
+* Network and security event ingestion through a REST API
+* MongoDB-based event and alert persistence
 * Rule-based suspicious activity detection
-* Behavioral feature extraction
+* Behavioral feature engineering
 * Machine-learning-based anomaly scoring
-* Isolation Forest models for unsupervised anomaly detection
+* Isolation Forest anomaly detection
+* Behavioral analysis of network activity
 * Failed-login anomaly detection
 * Alert generation
 * Audit trails
-* Event-specific audit queries
-* Deterministic event replay
+* Event replay
 * Model training and evaluation scripts
-* Automated API and ML testing
+* API and machine-learning testing
 
 ---
 
 ## 🧠 Detection Pipeline
-
-The project follows a multi-stage detection pipeline:
 
 ```text
 Network / Security Events
@@ -47,26 +45,28 @@ Network / Security Events
      Event Ingestion
           │
           ▼
-    Data Validation
+     Data Validation
           │
           ▼
-   Feature Engineering
+    Feature Engineering
           │
-          ├───────────────┐
-          ▼               ▼
+          ├─────────────────┐
+          ▼                 ▼
  Rule-Based Detection   Behavioral Analysis
-          │               │
-          │               ▼
-          │        Anomaly Detection
-          │        (Isolation Forest)
-          │               │
-          └───────┬───────┘
-                  ▼
-             Alert Engine
-                  │
-                  ▼
+          │                 │
+          │                 ▼
+          │          Anomaly Detection
+          │          (Isolation Forest)
+          │                 │
+          └────────┬────────┘
+                   ▼
+              Alert Engine
+                   │
+                   ▼
           Audit / Persistence
 ```
+
+The system combines explicit security rules with behavioral anomaly detection so that both known suspicious patterns and unusual activity can be investigated.
 
 ---
 
@@ -74,18 +74,18 @@ Network / Security Events
 
 ### 🔹 REST API
 
-The FastAPI backend provides endpoints for:
+The FastAPI backend provides functionality for:
 
 * Health checks
-* Event ingestion
+* Security event ingestion
 * Detection
 * Alert generation
 * Audit queries
 * Event replay
 
-Example health endpoint:
+Example:
 
-```http
+```text
 GET /health
 ```
 
@@ -93,70 +93,66 @@ GET /health
 
 ### 🔹 Event Processing
 
-Incoming events are validated and normalized before being processed.
+Incoming security events are validated and processed before detection.
 
-The system is designed to handle security-related events such as:
+The project supports behavioral analysis of activities such as:
 
 * Authentication activity
 * Failed login attempts
-* Network connection activity
+* Network connections
 * Port scanning behavior
 * Unusual connection patterns
-* Other behavioral security events
+* Other security-related events
 
 ---
 
 ### 🔹 Behavioral Feature Engineering
 
-The ML pipeline extracts behavioral characteristics from network activity, including temporal and connection-based features.
+The project extracts behavioral features from network activity.
 
 Examples include:
 
-* Source connection counts
-* Unique destination ports
-* Connection frequency
-* Destination diversity
-* Time-window-based behavioral statistics
+```text
+src_conn_count_10s
+src_conn_count_60s
+src_unique_dst_ports_10s
+```
 
-These features allow the anomaly detector to evaluate behavior rather than relying only on individual event attributes.
+These features help represent how a source behaves over a period of time instead of evaluating each network connection independently.
 
 ---
 
 ### 🔹 Machine Learning Anomaly Detection
 
-The project uses **Isolation Forest**, an unsupervised anomaly detection algorithm, to identify observations that differ significantly from the learned behavioral patterns.
+The machine-learning pipeline uses **Isolation Forest**, an unsupervised anomaly-detection algorithm.
 
-Multiple trained model versions are maintained during experimentation so that different feature sets and model configurations can be evaluated.
+The model is used to identify observations that behave significantly differently from the learned patterns.
 
-The repository also contains preprocessing, training, evaluation, and model-testing scripts.
+Multiple model versions are maintained during experimentation and evaluation.
 
 ---
 
-### 🔹 Rule-Based Detection
+### 🔹 Hybrid Detection
 
-Machine learning is complemented by deterministic security rules.
-
-This provides a hybrid approach:
+The project combines two detection approaches:
 
 ```text
 Known / Explicit Pattern
         ↓
-   Rule Detection
+Rule-Based Detection
 
 Unknown / Unusual Pattern
         ↓
-  ML Anomaly Detection
+Machine Learning
 ```
 
-This combination is useful because ML-based detection should not be treated as a replacement for deterministic security controls.
+This allows traditional security rules and behavioral anomaly detection to work together.
 
 ---
 
 ### 🔹 Audit Trail
 
-Detection results and relevant events can be persisted for later investigation.
-
-This provides a foundation for:
+Detection results and relevant events can be persisted for:
 
 * Security analysis
 * Incident investigation
@@ -219,9 +215,10 @@ cybersecurity-anomaly-detector/
 | Server                  | Uvicorn          |
 | Data Validation         | Pydantic         |
 | Database                | MongoDB          |
-| Machine Learning        | scikit-learn     |
+| Machine Learning        | Scikit-learn     |
 | Anomaly Detection       | Isolation Forest |
 | Data Processing         | Pandas           |
+| Numerical Computing     | NumPy            |
 | Model Serialization     | Joblib / Pickle  |
 | Version Control         | Git & GitHub     |
 | Development Environment | VS Code          |
@@ -230,18 +227,16 @@ cybersecurity-anomaly-detector/
 
 ## ⚙️ Getting Started
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Aaryamallik03/cybersecurity-anomaly-detector.git
 cd cybersecurity-anomaly-detector
 ```
 
----
+### 2. Create a Virtual Environment
 
-### 2. Create a virtual environment
-
-Windows:
+On Windows:
 
 ```powershell
 python -m venv .venv
@@ -253,49 +248,35 @@ Activate it:
 .\.venv\Scripts\Activate.ps1
 ```
 
----
+### 3. Install Dependencies
 
-### 3. Install dependencies
+Install the required Python packages used by the backend and machine-learning pipeline.
 
-If a `requirements.txt` file is available:
+If a requirements file is available in your local setup:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-Otherwise, install the required packages according to the project's backend and ML modules.
+### 4. Configure Environment Variables
 
----
+Create a local `.env` file using `.env.example` as a reference.
 
-### 4. Configure environment variables
+Do not commit `.env` to GitHub.
 
-Create a local `.env` file based on:
-
-```text
-.env.example
-```
-
-Do **not** commit your real `.env` file.
-
-It may contain credentials or database connection information.
-
----
-
-### 5. Start the backend
-
-From the project root:
+### 5. Start the Backend
 
 ```powershell
 uvicorn backend.main:app --reload
 ```
 
-The API should become available at:
+The API will be available at:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-FastAPI interactive documentation:
+FastAPI documentation:
 
 ```text
 http://127.0.0.1:8000/docs
@@ -305,37 +286,27 @@ http://127.0.0.1:8000/docs
 
 ## 🧪 API Health Check
 
-Once the server is running:
+Once the backend is running:
 
 ```bash
 curl -X GET "http://127.0.0.1:8000/health"
 ```
 
-Expected response:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-The exact response structure may vary depending on the current backend implementation.
+The endpoint should return a successful response when the backend is running correctly.
 
 ---
 
 ## 🤖 Machine Learning Workflow
 
-The ML pipeline is organized around four main stages:
-
 ### 1. Data Preparation
 
-Raw network/security data is cleaned and transformed into a format suitable for model training.
+Network/security data is cleaned and transformed before being used for model development.
 
-Large datasets are intentionally kept outside the Git repository.
+Large datasets are intentionally excluded from GitHub.
 
 ### 2. Feature Engineering
 
-Behavioral and network-level features are generated using the scripts in:
+Behavioral features are generated using:
 
 ```text
 ml/feature_engineering.py
@@ -344,7 +315,7 @@ ml/behavior_features.py
 
 ### 3. Model Training
 
-Training experiments are implemented in:
+Training scripts include:
 
 ```text
 ml/train.py
@@ -355,7 +326,7 @@ ml/train-model.py
 
 ### 4. Evaluation
 
-Model and detection performance can be evaluated using:
+Model evaluation is handled through:
 
 ```text
 ml/evaluate.py
@@ -365,11 +336,11 @@ ml/evaluate.py
 
 ## 📊 Dataset
 
-The project uses network traffic/security data for developing and evaluating anomaly detection techniques.
+The project uses network traffic and security-event data for developing and evaluating anomaly-detection models.
 
-Because the local dataset and processed files occupy several gigabytes, they are **not stored directly in this Git repository**.
+Large raw and processed datasets are not stored in the Git repository because of their size.
 
-The `.gitignore` configuration excludes:
+The following local directories are excluded from Git:
 
 ```text
 ml/data/
@@ -378,27 +349,27 @@ ml/flow_data_clean/
 ml/processed/
 ```
 
-This keeps the source repository manageable while allowing the complete dataset to remain available in the local development environment.
+This keeps the GitHub repository focused on the source code, models, configuration, and documentation.
 
 ---
 
 ## 🔐 Security Considerations
 
-This project is intended for **research, educational, and defensive cybersecurity purposes**.
+This project is intended for academic, research, and defensive cybersecurity purposes.
 
 Important considerations:
 
-* Do not commit API keys, passwords, or database credentials.
-* Keep `.env` files out of version control.
-* ML anomaly detection can produce false positives and false negatives.
-* An anomaly should be treated as a signal for investigation, not automatic proof of an attack.
-* Models should be evaluated against representative data before being used in a production security environment.
+* Never commit API keys, passwords, or database credentials.
+* Keep `.env` out of Git.
+* Anomaly detection can produce false positives and false negatives.
+* An anomaly does not automatically mean that an attack has occurred.
+* Models should be evaluated using representative security data before being considered for production use.
 
 ---
 
 ## 🧪 Testing
 
-The repository contains tests for different components of the system, including:
+The project contains testing scripts covering API, ingestion, model, and behavioral-feature functionality.
 
 ```text
 ml/test-api.py
@@ -407,67 +378,76 @@ ml/test-model.py
 ml/test_behavior_features.py
 ```
 
-Run the relevant test scripts from the project environment.
-
 ---
 
 ## 🔮 Future Improvements
 
-Potential future development includes:
+Planned improvements include:
 
-* [ ] Real-time network traffic ingestion
-* [ ] Improved model evaluation and benchmarking
-* [ ] Automated threshold calibration
-* [ ] Precision/recall/F1 reporting
-* [ ] Confusion matrix and ROC analysis
-* [ ] Detection dashboard
-* [ ] Streaming anomaly detection
-* [ ] Model version management
-* [ ] Explainable anomaly scores
-* [ ] Alert severity classification
-* [ ] SIEM integration
-* [ ] Docker deployment
-* [ ] CI/CD testing
-* [ ] Monitoring and model drift detection
+* Real-time network traffic ingestion
+* Improved model evaluation and benchmarking
+* Automated threshold calibration
+* Precision, recall, and F1-score reporting
+* Confusion matrix and ROC analysis
+* Security monitoring dashboard
+* Streaming anomaly detection
+* Improved model version management
+* Explainable anomaly scores
+* Alert severity classification
+* SIEM integration
+* Docker deployment
+* CI/CD testing
+* Model drift monitoring
 
 ---
 
 ## ⚠️ Current Limitations
 
-This project is still under active development.
+This project is currently under active development.
 
-The current implementation should **not** be described as a fully autonomous enterprise-grade intrusion detection system. Model performance depends heavily on the training data, feature engineering, threshold selection, and operating environment.
+It should not be considered a fully autonomous enterprise-grade Intrusion Detection System.
 
-In particular, anomaly detection does not automatically determine whether an event is malicious. It identifies behavior that appears unusual relative to the learned patterns.
+Detection performance depends on:
+
+* Training data
+* Feature engineering
+* Model configuration
+* Detection thresholds
+* Network environment
+
+Machine-learning anomaly detection identifies unusual behavior; it does not by itself prove that activity is malicious.
 
 ---
 
-## 📚 Project Goals
+## 🎯 Project Goals
 
-The main goals of this project are to explore:
+The main goals of this project are:
 
 * Cybersecurity anomaly detection
 * Network behavioral analysis
 * Unsupervised machine learning
-* Feature engineering for security data
-* Hybrid rule-based + ML detection
+* Security feature engineering
+* Hybrid rule-based and ML detection
 * REST-based security event processing
-* Practical deployment of ML models in backend systems
+* Practical ML backend development
+* Applying machine learning to cybersecurity monitoring
 
 ---
 
 ## 👩‍💻 Author
 
 **Aarya Mallik**
-B.Tech — Computer Science & Engineering
 
-GitHub: [@Aaryamallik03](https://github.com/Aaryamallik03)
+B.Tech — Computer Science & Engineering
+National Institute of Technology Meghalaya
+
+GitHub:
+https://github.com/Aaryamallik03
 
 ---
 
 ## 📄 License
 
-This project is currently intended as an academic/development project.
+This project is currently maintained as an academic/development project.
 
 A formal open-source license can be added when the project is ready for public distribution.
-
