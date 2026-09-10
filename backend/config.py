@@ -19,6 +19,19 @@ MODEL_PATH = Path(os.environ.get(
     "MODEL_PATH",
     str(Path(__file__).parent / "model.json"),
 ))
+ML_MODEL_PATH = Path(
+    os.environ.get(
+        "ML_MODEL_PATH",
+        str(Path(__file__).parent.parent / "ml" / "model.pkl"),
+    )
+)
+
+ML_ENCODER_PATH = Path(
+    os.environ.get(
+        "ML_ENCODER_PATH",
+        str(Path(__file__).parent.parent / "ml" / "label_encoder.pkl"),
+    )
+)
 
 # Simple shared-secret API key for the ingestion endpoint.
 # In production, prefer a real secrets manager over an env var.

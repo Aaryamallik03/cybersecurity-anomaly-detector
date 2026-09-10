@@ -1,3 +1,4 @@
+import joblib
 import json
 import logging
 from datetime import datetime, timezone
@@ -15,6 +16,7 @@ from detection import (
     check_high_rate_rule,
     ensure_utc,
     make_decision,
+    predict_attack,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +53,8 @@ def load_model() -> dict:
 
 
 MODEL = load_model()
+ML_MODEL = joblib.load(config.ML_MODEL_PATH)
+ML_ENCODER = joblib.load(config.ML_ENCODER_PATH)
 
 
 # ============================================================
@@ -58,11 +62,6 @@ MODEL = load_model()
 # ============================================================
 
 def require_api_key(x_api_key: str = Header(default="")):
-    """
-    Minimal shared-secret auth for the ingestion endpoint. Anyone who
-    can write to /ingest can write false entries into the audit trail,
-    so this endpoint should never be left open.
-    """
     if x_api_key != config.API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
@@ -76,7 +75,10 @@ def mongo_error_handler(request, exc):
     logger.exception("Database error")
     return JSONResponse(
         status_code=503,
-        content={"status": "error", "message": "Database temporarily unavailable"},
+        content={
+            "status": "error",
+            "message": "Database temporarily unavailable",
+        },
     )
 
 
@@ -85,7 +87,10 @@ def model_error_handler(request, exc):
     logger.exception("Model file error")
     return JSONResponse(
         status_code=500,
-        content={"status": "error", "message": "Internal configuration error"},
+        content={
+            "status": "error",
+            "message": "Internal configuration error",
+        },
     )
 
 
@@ -95,7 +100,9 @@ def model_error_handler(request, exc):
 
 @app.get("/")
 def home():
-    return {"message": "Cybersecurity Anomaly Detection System"}
+    return {
+        "message": "Cybersecurity Anomaly Detection System"
+    }
 
 
 @app.get("/health")
@@ -113,6 +120,39 @@ def health():
 
 
 # ============================================================
+# ML prediction
+# ============================================================
+
+@app.post("/ml/predict")
+def ml_predict(features: dict):
+    try:
+        result = predict_attack(
+            features,
+            ML_MODEL,
+            ML_ENCODER,
+        )
+
+        return {
+            "status": "success",
+            "prediction": result["prediction"],
+            "confidence": result["confidence"],
+        }
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except Exception:
+        logger.exception("ML prediction failed")
+        raise HTTPException(
+            status_code=500,
+            detail="ML prediction failed",
+        )
+
+
+# ============================================================
 # Event ingestion
 # ============================================================
 
@@ -123,33 +163,49 @@ def ingest_event(event: NetworkEvent):
     # --------------------------------------------------------
     # Duplicate event protection
     # --------------------------------------------------------
-    existing_event = events_collection.find_one({"event_id": event.event_id})
+
+    existing_event = events_collection.find_one(
+        {"event_id": event.event_id}
+    )
 
     if existing_event:
-        existing_audit = audit_collection.find_one({"event_id": event.event_id})
+        existing_audit = audit_collection.find_one(
+            {"event_id": event.event_id}
+        )
+
         return {
             "status": "duplicate",
             "message": "Event already exists",
             "event_id": event.event_id,
-            "decision": existing_audit["decision"] if existing_audit else "already_processed",
+            "decision": (
+                existing_audit["decision"]
+                if existing_audit
+                else "already_processed"
+            ),
         }
 
     # --------------------------------------------------------
     # Store normalized event
     # --------------------------------------------------------
+
     event_data = event.model_dump()
     event_data["timestamp"] = event.timestamp
     event_data["received_at"] = datetime.now(timezone.utc)
+
     events_collection.insert_one(event_data)
 
     # --------------------------------------------------------
     # State before decision
     # --------------------------------------------------------
-    active_alerts_before = alerts_collection.count_documents({"status": "active"})
+
+    active_alerts_before = alerts_collection.count_documents(
+        {"status": "active"}
+    )
 
     # --------------------------------------------------------
     # Rule detection
     # --------------------------------------------------------
+
     failed_login_triggered, failed_login_count = check_failed_login_rule(
         event,
         events_collection,
@@ -165,36 +221,81 @@ def ingest_event(event: NetworkEvent):
     )
 
     rules_triggered = []
+
     if failed_login_triggered:
         rules_triggered.append(
-            f"more_than_{config.FAILED_LOGIN_THRESHOLD}_failed_logins_in_{config.FAILED_LOGIN_WINDOW_MINUTES}min"
-        )
-    if high_rate_triggered:
-        rules_triggered.append(
-            f"more_than_{config.HIGH_RATE_THRESHOLD}_events_in_{config.HIGH_RATE_WINDOW_SECONDS}s"
+            f"more_than_{config.FAILED_LOGIN_THRESHOLD}_failed_logins_in_"
+            f"{config.FAILED_LOGIN_WINDOW_MINUTES}min"
         )
 
-    rule_triggered = failed_login_triggered or high_rate_triggered
+    if high_rate_triggered:
+        rules_triggered.append(
+            f"more_than_{config.HIGH_RATE_THRESHOLD}_events_in_"
+            f"{config.HIGH_RATE_WINDOW_SECONDS}s"
+        )
+
+    rule_triggered = (
+        failed_login_triggered or high_rate_triggered
+    )
 
     # --------------------------------------------------------
     # ML-style scoring
     # --------------------------------------------------------
+
     ml_score = calculate_ml_score(event, MODEL)
+
+    ml_prediction = None
+    ml_confidence = None
+
+    if event.ml_features:
+        try:
+            ml_result = predict_attack(
+                event.ml_features,
+                ML_MODEL,
+                ML_ENCODER,
+            )
+
+            ml_prediction = ml_result["prediction"]
+            ml_confidence = ml_result["confidence"]
+
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=str(exc),
+            )
+
+        except Exception:
+            logger.exception("ML prediction failed")
+            raise HTTPException(
+                status_code=500,
+                detail="ML prediction failed",
+            )
 
     # --------------------------------------------------------
     # Final decision
     # --------------------------------------------------------
-    decision = make_decision(rule_triggered, ml_score, MODEL)
+
+    decision = make_decision(
+        rule_triggered,
+        ml_score,
+        MODEL,
+        ml_prediction,
+        ml_confidence,
+    )
 
     # --------------------------------------------------------
     # Create alert if needed
     # --------------------------------------------------------
+
     alert_id = None
+
     if decision == "alert":
-        existing_alert = alerts_collection.find_one({
-            "event_id": event.event_id,
-            "alert_type": "cybersecurity_anomaly",
-        })
+        existing_alert = alerts_collection.find_one(
+            {
+                "event_id": event.event_id,
+                "alert_type": "cybersecurity_anomaly",
+            }
+        )
 
         if not existing_alert:
             alert_document = {
@@ -207,21 +308,32 @@ def ingest_event(event: NetworkEvent):
                 "failed_login_count": failed_login_count,
                 "high_rate_count": high_rate_count,
                 "ml_score": ml_score,
+                "ml_prediction": ml_prediction,
+                "ml_confidence": ml_confidence,
                 "created_at": datetime.now(timezone.utc),
             }
-            result = alerts_collection.insert_one(alert_document)
+
+            result = alerts_collection.insert_one(
+                alert_document
+            )
+
             alert_id = str(result.inserted_id)
 
-    active_alerts_after = alerts_collection.count_documents({"status": "active"})
+    active_alerts_after = alerts_collection.count_documents(
+        {"status": "active"}
+    )
 
     # --------------------------------------------------------
     # Audit trail
     # --------------------------------------------------------
+
     reason = {
         "rules_triggered": rules_triggered,
         "failed_login_count": failed_login_count,
         "high_rate_count": high_rate_count,
         "ml_score": ml_score,
+        "ml_prediction": ml_prediction,
+        "ml_confidence": ml_confidence,
         "decision": decision,
     }
 
@@ -230,8 +342,12 @@ def ingest_event(event: NetworkEvent):
         "timestamp": event.timestamp,
         "decision": decision,
         "reason": reason,
-        "state_before": {"active_alerts": active_alerts_before},
-        "state_after": {"active_alerts": active_alerts_after},
+        "state_before": {
+            "active_alerts": active_alerts_before
+        },
+        "state_after": {
+            "active_alerts": active_alerts_after
+        },
         "alert_id": alert_id,
         "created_at": datetime.now(timezone.utc),
     }
@@ -239,8 +355,14 @@ def ingest_event(event: NetworkEvent):
     audit_collection.insert_one(audit_document)
 
     logger.info(
-        "event_id=%s decision=%s ml_score=%s rules=%s",
-        event.event_id, decision, ml_score, rules_triggered,
+        "event_id=%s decision=%s ml_score=%s ml_prediction=%s "
+        "ml_confidence=%s rules=%s",
+        event.event_id,
+        decision,
+        ml_score,
+        ml_prediction,
+        ml_confidence,
+        rules_triggered,
     )
 
     return {
@@ -249,6 +371,8 @@ def ingest_event(event: NetworkEvent):
         "event_id": event.event_id,
         "decision": decision,
         "ml_score": ml_score,
+        "ml_prediction": ml_prediction,
+        "ml_confidence": ml_confidence,
         "rules_triggered": rules_triggered,
         "failed_login_count": failed_login_count,
         "high_rate_count": high_rate_count,
@@ -265,6 +389,7 @@ def get_alerts(
     limit: int = Query(50, ge=1, le=500),
 ):
     total = alerts_collection.count_documents({})
+
     alerts = list(
         alerts_collection.find({}, {"_id": 0})
         .sort("created_at", -1)
@@ -292,6 +417,7 @@ def get_audit(
     limit: int = Query(50, ge=1, le=500),
 ):
     total = audit_collection.count_documents({})
+
     audits = list(
         audit_collection.find({}, {"_id": 0})
         .sort("timestamp", 1)
@@ -315,9 +441,18 @@ def get_audit(
 
 @app.get("/audit/{event_id}")
 def get_event_audit(event_id: str):
-    audit = audit_collection.find_one({"event_id": event_id}, {"_id": 0})
+    audit = audit_collection.find_one(
+        {"event_id": event_id},
+        {"_id": 0},
+    )
 
     if not audit:
-        raise HTTPException(status_code=404, detail=f"No audit record for event_id '{event_id}'")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No audit record for event_id '{event_id}'",
+        )
 
-    return {"status": "success", "audit": audit}
+    return {
+        "status": "success",
+        "audit": audit,
+    }

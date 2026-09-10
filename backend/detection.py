@@ -9,6 +9,8 @@ live system did — they are calling the exact same functions.
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import joblib
+import pandas as pd
 from pydantic import BaseModel, Field
 
 
@@ -24,6 +26,41 @@ class NetworkEvent(BaseModel):
     action: str
     duration: Optional[float] = None
     confidence_score: float = Field(ge=0.0, le=1.0)
+    ml_features: Optional[dict] = None
+
+# ============================================================
+# Random Forest ML model
+# ============================================================
+
+def load_ml_model(model_path, encoder_path):
+    model = joblib.load(model_path)
+    encoder = joblib.load(encoder_path)
+    return model, encoder
+
+
+def predict_attack(features: dict, model, encoder):
+    expected_features = list(model.feature_names_in_)
+
+    missing = [feature for feature in expected_features if feature not in features]
+
+    if missing:
+        raise ValueError(f"Missing ML features: {missing}")
+
+    data = pd.DataFrame(
+        [[features[feature] for feature in expected_features]],
+        columns=expected_features,
+    )
+
+    prediction = model.predict(data)[0]
+    probabilities = model.predict_proba(data)[0]
+
+    predicted_label = encoder.inverse_transform([prediction])[0]
+    confidence = float(probabilities[prediction])
+
+    return {
+        "prediction": predicted_label,
+        "confidence": round(confidence, 4),
+    }
 
 
 # ============================================================
@@ -111,12 +148,37 @@ def check_high_rate_rule(event: NetworkEvent, events_collection, window_seconds:
 # Combine rule + ML signals into one decision
 # ============================================================
 
-def make_decision(rule_triggered: bool, ml_score: float, model: dict) -> str:
+def make_decision(
+    rule_triggered: bool,
+    ml_score: float,
+    model: dict,
+    ml_prediction: str | None = None,
+    ml_confidence: float | None = None,
+) -> str:
     alert_threshold = model["alert_threshold"]
     review_threshold = model["review_threshold"]
 
-    if rule_triggered or ml_score >= alert_threshold:
+    if rule_triggered:
         return "alert"
+
+    if (
+        ml_prediction
+        and ml_prediction != "BENIGN"
+        and ml_confidence is not None
+        and ml_confidence >= 0.90
+    ):
+        return "alert"
+
+    if ml_score >= alert_threshold:
+        return "alert"
+
+    if (
+        ml_prediction
+        and ml_prediction != "BENIGN"
+        and ml_confidence is not None
+        and ml_confidence >= 0.70
+    ):
+        return "pending_review"
 
     if ml_score >= review_threshold:
         return "pending_review"
