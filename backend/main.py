@@ -8,8 +8,8 @@ from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-import config
-from detection import (
+from.import config
+from.detection import (
     NetworkEvent,
     calculate_ml_score,
     check_failed_login_rule,
