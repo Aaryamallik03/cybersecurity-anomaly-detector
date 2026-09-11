@@ -1,5 +1,10 @@
-fastapi
-uvicorn
-pymongo
-pydantic
-python-dotenv
+fastapi==0.141.1
+uvicorn==0.52.0
+pymongo==4.18.0
+pydantic==2.13.5
+python-dotenv==1.2.3
+joblib==1.6.0
+pandas==3.0.5
+numpy==2.5.3
+scikit-learn==1.5.2
+scipy==1.18.1
