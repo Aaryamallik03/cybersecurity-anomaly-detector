@@ -1,5 +1,7 @@
 # 🛡️ Cybersecurity Anomaly Detector
 
+🔗 **Live Demo:** [API Docs](https://anomaly-detector-488945240645.us-central1.run.app/docs)
+
 A machine-learning-assisted cybersecurity monitoring system for detecting suspicious network activity and behavioral anomalies.
 
 The project combines a FastAPI backend, MongoDB event persistence, rule-based detection, behavioral feature engineering, and Isolation Forest-based anomaly detection to analyze network and security events.
@@ -451,3 +453,4 @@ https://github.com/Aaryamallik03
 This project is currently maintained as an academic/development project.
 
 A formal open-source license can be added when the project is ready for public distribution.
+
