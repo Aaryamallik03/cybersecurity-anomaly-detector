@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8ef">
+  <meta name="description" content="A playful, colorful portfolio website for a real-time cybersecurity anomaly detection system built with FastAPI and MongoDB.">
+  <title>OddOneOut — Cybersecurity Anomaly Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-wash" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#home"><span class="brand-icon">✳</span><span>odd<span class="brand-purple">one</span>out<span class="brand-period">.</span></span></a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#how">How it works</a><a href="#playground">Playground</a><a href="#about">The project</a>
+    </nav>
+    <a class="header-link" href="https://github.com/Aaryamallik03/cybersecurity-anomaly-detector" target="_blank" rel="noreferrer">See the code <span>↗</span></a>
+    <button class="menu-button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  </header>
+
+  <main id="home">
+    <section class="hero wrap">
+      <div class="hero-text">
+        <div class="eyebrow"><span class="eyebrow-star">✦</span> A LITTLE SCORING. A LOT OF CURIOSITY.</div>
+        <h1>Hey, who’s the<br><span class="scribble">odd one out?</span><span class="question">✳</span></h1>
+        <p class="hero-lede">Networks have patterns. Sometimes something doesn’t fit. This project ingests network events, checks them against rules and a deterministic scoring model, and raises alerts for the weird stuff worth a second look.</p>
+        <div class="hero-buttons"><a class="btn btn-dark" href="#playground">Explore the playground <span>↘</span></a><a class="text-link" href="https://github.com/Aaryamallik03/cybersecurity-anomaly-detector" target="_blank" rel="noreferrer">Peek at GitHub <span>↗</span></a></div>
+        <div class="hero-footnote"><span class="tiny-spark">✳</span> Learning project, not a production security service.</div>
+      </div>
+      <div class="plasma-card">
+        <canvas id="plasma" aria-hidden="true"></canvas>
+        <div class="plasma-overlay">
+          <div class="plasma-label"><span class="status-dot"></span> THE PATTERN PLAYGROUND <span class="pill">DEMO MODE</span></div>
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="core"><span>?</span></div>
+          <div class="float-chip chip-a"><span class="chip-icon mint">↗</span><span><b>usual-ish</b><small>looks familiar</small></span></div>
+          <div class="float-chip chip-b"><span class="chip-icon coral">!</span><span><b>hmm, unusual</b><small>take a closer look</small></span></div>
+          <div class="float-chip chip-c"><span class="chip-icon blue">⌁</span><span><b>traffic patterns</b><small>little clues add up</small></span></div>
+          <span class="doodle doodle-one">✳</span><span class="doodle doodle-two">✴</span>
+          <div class="plasma-bottom"><span>CURIOUS BY DESIGN</span><span>SCROLL TO EXPLORE ↓</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sticker-strip" aria-label="Project themes">
+      <span>📊 DETERMINISTIC SCORING</span><i>✳</i><span>🕵️ ANOMALY SPOTTING</span><i>✳</i><span>📡 NETWORK EVENTS</span><i>✳</i><span>🪄 RULE-BASED CHECKS</span>
+    </section>
+
+    <section class="section wrap" id="how">
+      <div class="section-top"><div><div class="eyebrow">01 / THE BIG IDEA</div><h2>Not all weird is bad.<br><span class="highlight-purple">But weird is worth a look.</span></h2></div><p class="section-intro">An anomaly detector looks for events that stand apart from what’s expected. It’s a helpful clue—not a verdict.</p></div>
+      <div class="idea-grid">
+        <article class="idea-card card-yellow"><div class="big-emoji">🧩</div><span class="mini-label">01 · COLLECT EVENTS</span><h3>Bring every event in cleanly</h3><p>Network events arrive through a REST API, follow one unified schema, and duplicates are ignored so counts stay honest.</p><span class="card-decoration">✳</span></article>
+        <article class="idea-card card-pink"><div class="big-emoji">🔎</div><span class="mini-label">02 · SPOT THE ODD</span><h3>Look for the outliers</h3><p>Rules such as failed-login detection and a local scoring model flag unusual activity. Unusual doesn’t automatically mean malicious.</p><span class="card-decoration">↗</span></article>
+        <article class="idea-card card-blue"><div class="big-emoji">🧠</div><span class="mini-label">03 · KEEP THE RECEIPTS</span><h3>Explain every alert</h3><p>Alerts come with an audit trail, and past events can be replayed to confirm the same input gives the same result.</p><span class="card-decoration">◎</span></article>
+      </div>
+    </section>
+
+    <section class="play-section" id="playground">
+      <div class="wrap">
+        <div class="section-top"><div><div class="eyebrow">02 / TRY IT YOURSELF</div><h2>Send an event.<br><span class="highlight-green">Watch it get judged.</span></h2></div><p class="section-intro">This demo really runs in your browser. Events pass through duplicate protection, rules and a scoring step, then alerts and an audit trail appear. It uses its own simple logic to show the ideas, not the exact backend code.</p></div>
+        <div class="playground" id="lab">
+          <div class="play-header"><div class="play-title"><span class="play-star">✳</span><div><b>Event lab 🧪</b><small>A WORKING IN-BROWSER SIMULATOR</small></div></div><span class="demo-pill">SIMULATED EVENTS</span></div>
+          <div class="play-stats">
+            <div class="stat stat-lilac"><span>Events accepted</span><strong id="st-events">0</strong><small>passed validation</small></div>
+            <div class="stat stat-mint"><span>Duplicates ignored</span><strong id="st-dups">0</strong><small>blocked by protection</small></div>
+            <div class="stat stat-peach"><span>Alerts raised</span><strong id="st-alerts">0</strong><small>rules or high score</small></div>
+          </div>
+          <div class="play-body">
+            <div class="activity-panel">
+              <div class="panel-heading"><div><b>1 · Send an event</b><small>Pick a source, then fire away</small></div><span class="chart-sticker">TRY ME</span></div>
+              <div class="lab-row"><label for="lab-src">SOURCE</label><select id="lab-src"><option>10.0.0.24</option><option>10.0.0.18</option><option>10.0.0.07</option></select></div>
+              <div class="lab-controls">
+                <button class="lab-btn good" data-act="ok">✅ Normal login</button>
+                <button class="lab-btn danger" data-act="fail">❌ Failed login</button>
+                <button class="lab-btn danger" data-act="burst">💥 Burst of 6 failures</button>
+                <button class="lab-btn" data-act="dup">🔁 Send duplicate</button>
+                <button class="lab-btn" data-act="rand">🎲 Random event</button>
+                <button class="lab-btn ghost" data-act="reset">↺ Reset</button>
+              </div>
+              <div class="panel-heading"><div><b>2 · Live event feed</b><small>Tap an event to see its audit trail</small></div><span class="count-bubble" id="ev-count">0</span></div>
+              <div class="event-list" id="ev-list"></div>
+            </div>
+            <div class="feed-panel">
+              <div class="panel-heading"><div><b>3 · What the system did</b><small>Alerts and the audit trail</small></div></div>
+              <div class="lab-tabs"><button class="lab-tab active" data-view="alerts">Alerts</button><button class="lab-tab" data-view="audit">Audit trail</button></div>
+              <div class="log-list" id="log-list" aria-live="polite"></div>
+              <button class="lab-btn ghost" id="audit-toggle" hidden>Show all events</button>
+              <div class="lab-actions"><button class="lab-btn good" data-act="replay">▶ Replay all events</button><span id="replay-msg" aria-live="polite"></span></div>
+              <div class="clue-box"><span class="clue-label">HOW THIS DEMO DECIDES <span>✦</span></span><p>• The same event ID twice is ignored as a duplicate.<br>• 3 or more failed logins from one source within 60 seconds raise an alert.<br>• A successful login right after 3 or more failures raises an alert.<br>• Otherwise a simple 0–1 score decides: 0.7 or more raises an alert.</p><div class="clue-foot">Same input, same result. That’s what replay checks.</div></div>
+            </div>
+          </div>
+          <div class="play-footer"><span>✳ Runs entirely in your browser</span><span>NO LIVE NETWORK · SIMULATED DATA</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap tech-section" id="about">
+      <div class="section-top"><div><div class="eyebrow">03 / UNDER THE HOOD</div><h2>Small project.<br><span class="highlight-pink">Serious curiosity.</span></h2></div><p class="section-intro">The fun visuals are the wrapper. The real story is the code, the tests, and how repeatable the results are.</p></div>
+      <div class="tech-layout">
+        <div class="tech-note"><div class="note-doodle">✳</div><h3>From data to “huh, that’s odd.”</h3><p>Events come in through a FastAPI endpoint, are stored in MongoDB, checked by rules and a local scoring model, and turned into alerts with an audit trail you can replay.</p><a class="btn btn-dark" href="https://github.com/Aaryamallik03/cybersecurity-anomaly-detector" target="_blank" rel="noreferrer">Visit the repository <span>↗</span></a></div>
+        <div class="tech-list">
+          <div class="tech-row"><span class="tech-icon purple-icon">⌁</span><div><b>Rule-based detection</b><small>Failed-login anomaly checks</small></div><span class="tech-number">01</span></div>
+          <div class="tech-row"><span class="tech-icon green-icon">▦</span><div><b>Deterministic scoring</b><small>A local model.json gives repeatable scores</small></div><span class="tech-number">02</span></div>
+          <div class="tech-row"><span class="tech-icon orange-icon">⚑</span><div><b>Duplicate protection</b><small>Repeated events are ignored</small></div><span class="tech-number">03</span></div>
+          <div class="tech-row"><span class="tech-icon blue-icon">⌘</span><div><b>FastAPI + MongoDB</b><small>REST ingestion, a unified schema and persistence</small></div><span class="tech-number">04</span></div>
+          <div class="tech-row"><span class="tech-icon pink-icon">♡</span><div><b>Audit trail &amp; replay</b><small>Event-specific audit queries, deterministic replay and automated tests</small></div><span class="tech-number">05</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="closing-spark spark-left">✳</div><div class="closing-spark spark-right">✴</div>
+      <div class="wrap closing-inner"><div class="eyebrow">THAT'S THE IDEA!</div><h2>Stay curious.<br><span>Question the pattern.</span></h2><p>Want to see how the project actually works? The source code is the place to start.</p><a class="btn btn-light" href="https://github.com/Aaryamallik03/cybersecurity-anomaly-detector" target="_blank" rel="noreferrer">Let's look at the code <span>↗</span></a><div class="closing-disclaimer">Portfolio demo · Simulated events · Not a production security tool</div></div>
+    </section>
+  </main>
+  <footer class="footer wrap"><a class="brand" href="#home"><span class="brand-icon">✳</span><span>odd<span class="brand-purple">one</span>out<span class="brand-period">.</span></span></a><span>Made with curiosity and a few suspicious pixels.</span><a href="#home">Back to top ↑</a></footer>
+  <script src="script.js"></script>
+</body>
+</html>
