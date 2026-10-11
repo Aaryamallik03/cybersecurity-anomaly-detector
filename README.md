@@ -439,7 +439,6 @@ The main goals of this project are:
 **Aarya Mallik**
 
 B.Tech — Computer Science & Engineering
-National Institute of Technology Meghalaya
 
 GitHub:
 https://github.com/Aaryamallik03
