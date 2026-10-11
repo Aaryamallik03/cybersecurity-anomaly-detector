@@ -426,7 +426,7 @@ The main goals of this project are:
 * Cybersecurity anomaly detection
 * Network behavioral analysis
 * Unsupervised machine learning
-* Security feature engineering
+* Security feature engineering 
 * Hybrid rule-based and ML detection
 * REST-based security event processing
 * Practical ML backend development
