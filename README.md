@@ -4,7 +4,6 @@ A machine-learning-assisted cybersecurity monitoring system for detecting suspic
 
 The project combines a FastAPI backend, MongoDB event persistence, rule-based detection, behavioral feature engineering, and Isolation Forest-based anomaly detection to analyze network and security events.
 
-> **Project Status:** Active Development
 > **Primary Language:** Python
 > **Backend:** FastAPI
 > **Machine Learning:** Scikit-learn / Isolation Forest
